@@ -69,7 +69,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --locked --all-features
+          cargo build --locked --all-features --verbose
         # env:
         #   RUSTC_WRAPPER: sccache
 

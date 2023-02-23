@@ -1,0 +1,105 @@
+name: all-features
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ["docs/**", "README.md"]
+  pull_request:
+    branches: [master]
+    paths-ignore: ["docs/**", "README.md"]
+
+jobs:
+  test_all:
+    name: Test features
+
+    runs-on: ubuntu-latest
+    # TODO(kakoc): move to another file separately
+    # strategy:
+    #   matrix:
+    #     args: ["--no-default-features", "--all-features"]
+    # env:
+    #   LOCUTUS_LOG: error
+    #   CARGO_TARGET_DIR: ${{ github.workspace }}/target"
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v3
+
+      # - name: Cache cargo registry
+      #   id: cache-cargo-registry
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.cargo
+      #     key: cargo-registry-${{ hashFiles('Cargo.lock') }}
+      #     restore-keys: cargo-registry-
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: "true"
+          default: "true"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/locutus-core
+            crates/locutus-dev
+            crates/locutus-macros
+            crates/locutus-node
+            crates/locutus-runtime
+            crates/locutus-stdlib
+
+      # - name: Install sccache
+      #   run: |
+      #     curl -sSL https://github.com/mozilla/sccache/releases/download/v0.3.3/sccache-v0.3.3-x86_64-unknown-linux-musl.tar.gz | tar xz
+      #     sudo mv sccache-v0.3.3-x86_64-unknown-linux-musl/sccache /usr/local/bin/
+      #     sccache --version
+
+      # - name: Configure sccache
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+      #       core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      # - name: Run sccache stat for check
+      #   shell: bash
+      #   run: ${SCCACHE_PATH} --show-stats
+
+      - name: Build
+        run: |
+          cargo build --locked --all-features
+          cargo install --path ./crates/locutus-node
+        # env:
+        #   RUSTC_WRAPPER: sccache
+
+      # - name: Add dependencies
+      #   run: |
+      #     rustup target add wasm32-unknown-unknown
+      #     rustup target add wasm32-wasi
+
+      # - name: Install stdlib packages
+      #   working-directory: apps/stdlib
+      #   run: npm install
+
+      # TODO(kakoc) move to another folder
+      # - name: Test - default
+      #   run: cargo test
+
+      # - name: Test - features
+      #   run: cargo test --workspace --all-features
+
+      # - name: Cache cargo registry
+      #   if: always()
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.cargo
+      #     key: cargo-registry-${{ hashFiles('Cargo.lock') }}
+
+
+

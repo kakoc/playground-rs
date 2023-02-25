@@ -49,6 +49,7 @@ jobs:
           workspaces: |
             crates/a
             crates/b
+            . -> target
 
       # - name: Install sccache
       #   run: |
